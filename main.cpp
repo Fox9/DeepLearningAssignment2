@@ -105,9 +105,9 @@ void update_weights_output(float learningRate, float outputs[], float errors[], 
 
 
 void update_weights_hidden(float learningRate, float outputs[], float errors[], float weights[numOfHiddenNodes][numOfInputNodes]) {
-    float deltaWeights[numOfInputNodes][numOfHiddenNodes];
-    for(int i = 0; i < numOfInputNodes; i++) {
-        for(int j = 0; j < numOfHiddenNodes; j++) {
+    float deltaWeights[numOfHiddenNodes][numOfInputNodes];
+    for(int i = 0; i < numOfHiddenNodes; i++) {
+        for(int j = 0; j < numOfInputNodes; j++) {
             deltaWeights[i][j] = learningRate  * outputs[i] * errors[j];
             weights[i][j] += deltaWeights[i][j];
         }
@@ -163,8 +163,9 @@ int main(int argc, char const *argv[]) {
     randomizeWeightMatrixForOutPut(weightsOutput);
     
     for(int simulation = 0; simulation < 20; simulation++) { // ВОТ ТУТ ВООБЩЕ КАК ЗАПУСКАТЬ ИЛИ ЧТО ТУТ ПИСАТЬ ТИПА
-        
+        cout << "start simulation " << simulation << endl;
         for(int picIndex = 0; picIndex < sizeData; picIndex++) {
+            
             get_input(inputNodes, zData, picIndex, 0.3);
             
             initTarget(target, inputNodes, zData[picIndex].label);
@@ -178,9 +179,8 @@ int main(int argc, char const *argv[]) {
             get_error_for_output(errorsOutput, target, outputNodes);
             update_weights_output(learningRate, outputNodes, errorsOutput, weightsOutput);
             
-            
             get_error_for_hidden_layer(errorsOutput, errorsHidden, hiddenNodes, weightsOutput);
-            update_weights_hidden(learningRate, hiddenNodes, errorsOutput, weightsHidden);
+            update_weights_hidden(learningRate, hiddenNodes, errorsHidden, weightsHidden);
         }
         
         float resultError = 0;
