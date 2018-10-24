@@ -26,6 +26,17 @@ void randomizeWeightMatrixForOutPut(float weights[numOfOutputNodes][numOfHiddenN
     }
 }
 
+void initTarget(float target[], int numberOnPicture) {
+    for(int i = 0; i < numOfOutputNodes; i++) {
+        if (i == numberOnPicture) {
+            target[i] = 1;
+        } else {
+            target[i] = 0;
+        }
+//         printf("target[%d] = %f\n", i, target[i]);
+    }
+}
+
 void get_output_hidden(float hiddenLyaer[], int input[], float weights[numOfHiddenNodes][numOfInputNodes]) {
     
     for(int i = 0; i < numOfHiddenNodes; i++) {
@@ -37,7 +48,7 @@ void get_output_hidden(float hiddenLyaer[], int input[], float weights[numOfHidd
     }
 }
 
-void get_output(float output[], int input[], float weights[numOfOutputNodes][numOfHiddenNodes]) {
+void get_output(float output[], float input[], float weights[numOfOutputNodes][numOfHiddenNodes]) {
     
     for(int i = 0; i < numOfOutputNodes; i++) {
         float resultOfMultiplication = 0;
@@ -97,7 +108,7 @@ void update_weights_hidden(float learningRate, float outputs[], float errors[], 
     }
 }
 
-int main() {
+int main(int argc, char const *argv[]) {
     // --- an example for working with random numbers
     seed_randoms();
     
@@ -129,11 +140,13 @@ int main() {
     float errorsHidden[numOfHiddenNodes];
     float errorsOutput[numOfOutputNodes];
     
+    float target[numOfOutputNodes];
+    
     float weightsHidden[numOfHiddenNodes][numOfInputNodes];
     randomizeWeightMatrixForHidden(weightsHidden);
     
     float weightsOutput[numOfOutputNodes][numOfHiddenNodes];
-    randomizeWeightMatrixForHidden(weightsOutput);
+    randomizeWeightMatrixForOutPut(weightsOutput);
     
     for(int simulation = 0; simulation < 20; simulation++) {
         
@@ -141,11 +154,13 @@ int main() {
             
             get_input(inputNodes, zData, picIndex, 0.3);
             
+            initTarget(target, zData[picIndex].label);
+            
             get_output_hidden(hiddenNodes, inputNodes, weightsHidden);
-            squash_output(hiddenNodes)
+            squash_output(hiddenNodes);
             
             get_output(outputNodes, hiddenNodes, weightsOutput);
-            squash_output(outputNodes)
+            squash_output(outputNodes);
             
             get_error_for_output(errorsOutput, target, outputNodes);
             update_weights_output(learningRate, outputNodes, errorsOutput, weightsOutput);
