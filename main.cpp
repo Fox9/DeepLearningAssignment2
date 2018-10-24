@@ -7,7 +7,7 @@
 using namespace std;
 
 #define numOfInputNodes 785
-#define numOfHiddenNodes 10
+#define numOfHiddenNodes 11
 #define numOfOutputNodes 785
 
 void randomizeWeightMatrixForHidden(float weights[numOfHiddenNodes][numOfInputNodes]) {
@@ -39,7 +39,8 @@ void initTarget(float target[], int numberOnPicture) {
 
 void get_output_hidden(float hiddenLyaer[], int input[], float weights[numOfHiddenNodes][numOfInputNodes]) {
     
-    for(int i = 0; i < numOfHiddenNodes; i++) {
+    hiddenLyaer[0] = 1; //bias for hidden nodes
+    for(int i = 1; i < numOfHiddenNodes; i++) {
         float resultOfMultiplication = 0;
         for(int j = 0; j < numOfInputNodes; j++) {
             resultOfMultiplication += input[j] * weights[i][j];
@@ -131,7 +132,7 @@ int main(int argc, char const *argv[]) {
         return -1;
     }
     
-    float learningRate = 0.5;
+    float learningRate = 0.5; // И ТУТ СТАТИЧНОЕ ЗНАЧЕНИЕ ТИПА, МОЖНО САМОМУ ДА ВЫБИРВАТЬ?
     
     int inputNodes[numOfInputNodes];
     float hiddenNodes[numOfHiddenNodes];
@@ -148,7 +149,7 @@ int main(int argc, char const *argv[]) {
     float weightsOutput[numOfOutputNodes][numOfHiddenNodes];
     randomizeWeightMatrixForOutPut(weightsOutput);
     
-    for(int simulation = 0; simulation < 20; simulation++) {
+    for(int simulation = 0; simulation < 20; simulation++) { // ВОТ ТУТ ВООБЩЕ КАК ЗАПУСКАТЬ ИЛИ ЧТО ТУТ ПИСАТЬ ТИПА
         
         for(int picIndex = 0; picIndex < sizeData; picIndex++) {
             
