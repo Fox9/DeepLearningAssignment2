@@ -131,7 +131,7 @@ int main(int argc, char const *argv[]) {
     
     mnist_data *zData;      // each image is 28x28 pixels
     unsigned int sizeData;  // depends on loadType
-    int loadType = 0; // loadType may be: 0, 1, or 2
+    int loadType = 1; // loadType may be: 0, 1, or 2
     if (mnistLoad(&zData, &sizeData, loadType)){
         printf("something went wrong loading data set\n");
         return -1;
@@ -139,13 +139,13 @@ int main(int argc, char const *argv[]) {
     
     mnist_data *zTestingData;      // each image is 28x28 pixels
     unsigned int sizeTestingData;  // depends on loadType
-    int loadTypeTesing = 1; // loadType may be: 0, 1, or 2
+    int loadTypeTesing = 2; // loadType may be: 0, 1, or 2
     if (mnistLoad(&zTestingData, &sizeTestingData, loadTypeTesing)){
         printf("something went wrong loading data set\n");
         return -1;
     }
     
-    float learningRate = 0.5; // И ТУТ СТАТИЧНОЕ ЗНАЧЕНИЕ ТИПА, МОЖНО САМОМУ ДА ВЫБИРВАТЬ?
+    float learningRate = 0.5; 
     
     int inputNodes[numOfInputNodes];
     float hiddenNodes[numOfHiddenNodes];
@@ -162,8 +162,7 @@ int main(int argc, char const *argv[]) {
     float weightsOutput[numOfOutputNodes][numOfHiddenNodes];
     randomizeWeightMatrixForOutPut(weightsOutput);
     
-    for(int simulation = 0; simulation < 20; simulation++) { // ВОТ ТУТ ВООБЩЕ КАК ЗАПУСКАТЬ ИЛИ ЧТО ТУТ ПИСАТЬ ТИПА
-        cout << "start simulation " << simulation << endl;
+    for(int simulation = 0; simulation < 20; simulation++) {
         for(int picIndex = 0; picIndex < sizeData; picIndex++) {
             
             get_input(inputNodes, zData, picIndex, 0.3);
