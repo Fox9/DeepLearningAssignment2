@@ -26,14 +26,10 @@ void randomizeWeightMatrixForOutPut(float weights[numOfOutputNodes][numOfHiddenN
     }
 }
 
-void initTarget(float target[], int numberOnPicture) {
-    for(int i = 0; i < numOfOutputNodes; i++) {
-        if (i == numberOnPicture) {
-            target[i] = 1;
-        } else {
-            target[i] = 0;
-        }
-//         printf("target[%d] = %f\n", i, target[i]);
+void initTarget(float target[], int input[], int numberOnPicture) {
+    target[0] = ((numberOnPicture % 2) == 0) ? 0 : 1; // odd or even number
+    for(int i = 1; i < numOfOutputNodes; i++) {
+        target[i] = (float) input[i];
     }
 }
 
@@ -88,6 +84,15 @@ void get_error_for_hidden_layer(float errorsOutput[], float errorsHidden[], floa
     
 }
 
+float getAverageError(float error[]) {
+    float errorsSum = 0;
+    for (int i = 0; i < numOfOutputNodes; i++) {
+        errorsSum += fabs(error[i]);
+    }
+    
+    return (errorsSum / numOfOutputNodes);
+}
+
 void update_weights_output(float learningRate, float outputs[], float errors[], float weights[numOfOutputNodes][numOfHiddenNodes]) {
     float deltaWeights[numOfHiddenNodes][numOfOutputNodes];
     for(int i = 0; i < numOfHiddenNodes; i++) {
@@ -132,6 +137,14 @@ int main(int argc, char const *argv[]) {
         return -1;
     }
     
+    mnist_data *zTestingData;      // each image is 28x28 pixels
+    unsigned int sizeTestingData;  // depends on loadType
+    int loadTypeTesing = 1; // loadType may be: 0, 1, or 2
+    if (mnistLoad(&zTestingData, &sizeTestingData, loadTypeTesing)){
+        printf("something went wrong loading data set\n");
+        return -1;
+    }
+    
     float learningRate = 0.5; // И ТУТ СТАТИЧНОЕ ЗНАЧЕНИЕ ТИПА, МОЖНО САМОМУ ДА ВЫБИРВАТЬ?
     
     int inputNodes[numOfInputNodes];
@@ -152,10 +165,9 @@ int main(int argc, char const *argv[]) {
     for(int simulation = 0; simulation < 20; simulation++) { // ВОТ ТУТ ВООБЩЕ КАК ЗАПУСКАТЬ ИЛИ ЧТО ТУТ ПИСАТЬ ТИПА
         
         for(int picIndex = 0; picIndex < sizeData; picIndex++) {
-            
             get_input(inputNodes, zData, picIndex, 0.3);
             
-            initTarget(target, zData[picIndex].label);
+            initTarget(target, inputNodes, zData[picIndex].label);
             
             get_output_hidden(hiddenNodes, inputNodes, weightsHidden);
             squash_output(hiddenNodes);
@@ -169,10 +181,30 @@ int main(int argc, char const *argv[]) {
             
             get_error_for_hidden_layer(errorsOutput, errorsHidden, hiddenNodes, weightsOutput);
             update_weights_hidden(learningRate, hiddenNodes, errorsOutput, weightsHidden);
-            
         }
         
+        float resultError = 0;
+        
+        for(int picIndex = 0; picIndex < sizeTestingData; picIndex++) {
+            get_input(inputNodes, zTestingData, picIndex, 0.3);
+            
+            initTarget(target, inputNodes, zTestingData[picIndex].label);
+            
+            get_output_hidden(hiddenNodes, inputNodes, weightsHidden);
+            squash_output(hiddenNodes);
+            
+            get_output(outputNodes, hiddenNodes, weightsOutput);
+            squash_output(outputNodes);
+            
+            get_error_for_output(errorsOutput, target, outputNodes);
+            resultError += getAverageError(errorsOutput);
+        }
+        
+        cout << (resultError / sizeTestingData) << " ";
+        
     }
+    
+    cout << endl;
     
     
     
