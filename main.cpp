@@ -1,4 +1,5 @@
 #include <iostream>
+#include <math.h>
 
 #include "randlib.h" 
 #include "mnist/mnist.h"
@@ -12,51 +13,88 @@ using namespace std;
 void randomizeWeightMatrixForHidden(float weights[numOfHiddenNodes][numOfInputNodes]) {
     for(int i = 0; i < numOfHiddenNodes; i++) {
         for(int j = 0; j < numOfInputNodes; j++) {
-            matrix[i][j] = rand_weight();
+            weights[i][j] = rand_weight();
         }
     }
 }
 
-void randomizeWeightMatrixForOutPut(float weights[numOfOutputNodes][numOfInputNodes]) {
+void randomizeWeightMatrixForOutPut(float weights[numOfOutputNodes][numOfHiddenNodes]) {
     for(int i = 0; i < numOfOutputNodes; i++) {
-        for(int j = 0; j < numOfInputNodes; j++) {
-            matrix[i][j] = rand_weight();
+        for(int j = 0; j < numOfHiddenNodes; j++) {
+            weights[i][j] = rand_weight();
         }
     }
 }
 
-void outputForHiddenLayer(float hiddenLyaer[], int input[], float weights[numOfHiddenNodes][numOfInputNodes]) {
+void get_output_hidden(float hiddenLyaer[], int input[], float weights[numOfHiddenNodes][numOfInputNodes]) {
     
     for(int i = 0; i < numOfHiddenNodes; i++) {
-        float resultOfMultiplication = 0
+        float resultOfMultiplication = 0;
         for(int j = 0; j < numOfInputNodes; j++) {
-            resultOfMultiplication += input[j] * weights[i][j]
+            resultOfMultiplication += input[j] * weights[i][j];
         }
         hiddenLyaer[i] = resultOfMultiplication;
     }
 }
 
-void outputForHiddenLayer(float output[], int input[], float weights[numOfOutputNodes][numOfInputNodes]) {
+void get_output(float output[], int input[], float weights[numOfOutputNodes][numOfHiddenNodes]) {
     
     for(int i = 0; i < numOfOutputNodes; i++) {
-        float resultOfMultiplication = 0
-        for(int j = 0; j < numOfInputNodes; j++) {
-            resultOfMultiplication += input[j] * weights[i][j]
+        float resultOfMultiplication = 0;
+        for(int j = 0; j < numOfHiddenNodes; j++) {
+            resultOfMultiplication += input[j] * weights[i][j];
         }
-        hiddenLyaer[i] = resultOfMultiplication;
+        output[i] = resultOfMultiplication;
     }
 }
 
 void squash_output(float output[]) {
     
-    for(int i = 0; i < numOutputNodes; i++) {
+    for(int i = 0; i < numOfOutputNodes; i++) {
         output[i] = 1.0 / (1.0 + pow(M_E, -1 * output[i]));
         // printf("squashed output[%d] = %f\n", i, output[i]);
     }
 }
 
-void get_error_hidden_layer(float target) {
+void get_error_for_output(float errors[], float target[], float output[]) {
+    for(int i = 0; i < numOfOutputNodes; i++) {
+        errors[i] = (target[i] - output[i]) * output[i] * (1 - output[i]);
+    }
+}
+
+void get_error_for_hidden_layer(float errorsOutput[], float errorsHidden[], float hiddenOutput[], float weightsOutput[numOfOutputNodes][numOfHiddenNodes]) {
+    float resultOfMultiplication = 0;
+    for(int i = 0; i < numOfHiddenNodes; i++) {
+        for(int j = 0; j < numOfOutputNodes; j++) {
+            resultOfMultiplication += errorsOutput[j] * weightsOutput[i][j];
+        }
+    }
     
+    for(int i = 0; i < numOfHiddenNodes; i++) {
+        errorsOutput[i] = hiddenOutput[i] * (1 - hiddenOutput[i]) * resultOfMultiplication;
+    }
+    
+}
+
+void update_weights_output(float learningRate, float outputs[], float errors[], float weights[numOfOutputNodes][numOfHiddenNodes]) {
+    float deltaWeights[numOfHiddenNodes][numOfOutputNodes];
+    for(int i = 0; i < numOfHiddenNodes; i++) {
+        for(int j = 0; j < numOfOutputNodes; j++) {
+            deltaWeights[i][j] = learningRate  * outputs[i] * errors[j];
+            weights[i][j] += deltaWeights[i][j];
+        }
+    }
+}
+
+
+void update_weights_hidden(float learningRate, float outputs[], float errors[], float weights[numOfHiddenNodes][numOfInputNodes]) {
+    float deltaWeights[numOfInputNodes][numOfHiddenNodes];
+    for(int i = 0; i < numOfInputNodes; i++) {
+        for(int j = 0; j < numOfHiddenNodes; j++) {
+            deltaWeights[i][j] = learningRate  * outputs[i] * errors[j];
+            weights[i][j] += deltaWeights[i][j];
+        }
+    }
 }
 
 int main() {
@@ -82,17 +120,19 @@ int main() {
         return -1;
     }
     
-    float learningRate = 0.5
+    float learningRate = 0.5;
     
     int inputNodes[numOfInputNodes];
     float hiddenNodes[numOfHiddenNodes];
     float outputNodes[numOfOutputNodes];
-    float errors[numOfOutputNodes];
+    
+    float errorsHidden[numOfHiddenNodes];
+    float errorsOutput[numOfOutputNodes];
     
     float weightsHidden[numOfHiddenNodes][numOfInputNodes];
     randomizeWeightMatrixForHidden(weightsHidden);
     
-    float weightsOutput[numOfOutputNodes][numOfInputNodes];
+    float weightsOutput[numOfOutputNodes][numOfHiddenNodes];
     randomizeWeightMatrixForHidden(weightsOutput);
     
     for(int simulation = 0; simulation < 20; simulation++) {
@@ -101,15 +141,21 @@ int main() {
             
             get_input(inputNodes, zData, picIndex, 0.3);
             
-            outputForHiddenLayer(hiddenNodes, inputNodes, weightsHidden);
+            get_output_hidden(hiddenNodes, inputNodes, weightsHidden);
             squash_output(hiddenNodes)
             
             get_output(outputNodes, hiddenNodes, weightsOutput);
-            squash_output(weightsOutput)
+            squash_output(outputNodes)
             
-            get_error()
+            get_error_for_output(errorsOutput, target, outputNodes);
+            update_weights_output(learningRate, outputNodes, errorsOutput, weightsOutput);
+            
+            
+            get_error_for_hidden_layer(errorsOutput, errorsHidden, hiddenNodes, weightsOutput);
+            update_weights_hidden(learningRate, hiddenNodes, errorsOutput, weightsHidden);
             
         }
+        
     }
     
     
