@@ -28,21 +28,22 @@ void randomizeWeightMatrixForOutPut(float weights[numOfOutputNodes][numOfHiddenN
 
 void initTarget(float target[], int input[], int numberOnPicture) {
     target[0] = ((numberOnPicture % 2) == 0) ? 0 : 1; // odd or even number
-    for(int i = 1; i < numOfOutputNodes; i++) {
+    for(int i = 0; i < numOfOutputNodes; i++) {
         target[i] = (float) input[i];
     }
+    
 }
 
 void get_output_hidden(float hiddenLyaer[], int input[], float weights[numOfHiddenNodes][numOfInputNodes]) {
     
-    hiddenLyaer[0] = 1; //bias for hidden nodes
-    for(int i = 1; i < numOfHiddenNodes; i++) {
+    for(int i = 0; i < numOfHiddenNodes; i++) {
         float resultOfMultiplication = 0;
         for(int j = 0; j < numOfInputNodes; j++) {
             resultOfMultiplication += input[j] * weights[i][j];
         }
         hiddenLyaer[i] = resultOfMultiplication;
     }
+    hiddenLyaer[numOfHiddenNodes - 1] = 1; //bias for hidden nodes
 }
 
 void get_output(float output[], float input[], float weights[numOfOutputNodes][numOfHiddenNodes]) {
@@ -72,8 +73,8 @@ void get_error_for_output(float errors[], float target[], float output[]) {
 
 void get_error_for_hidden_layer(float errorsOutput[], float errorsHidden[], float hiddenOutput[], float weightsOutput[numOfOutputNodes][numOfHiddenNodes]) {
     float resultOfMultiplication = 0;
-    for(int i = 0; i < numOfHiddenNodes; i++) {
-        for(int j = 0; j < numOfOutputNodes; j++) {
+    for(int i = 0; i < numOfOutputNodes; i++) {
+        for(int j = 0; j < numOfHiddenNodes; j++) {
             resultOfMultiplication += errorsOutput[j] * weightsOutput[i][j];
         }
     }
@@ -94,9 +95,9 @@ float getAverageError(float error[]) {
 }
 
 void update_weights_output(float learningRate, float outputs[], float errors[], float weights[numOfOutputNodes][numOfHiddenNodes]) {
-    float deltaWeights[numOfHiddenNodes][numOfOutputNodes];
-    for(int i = 0; i < numOfHiddenNodes; i++) {
-        for(int j = 0; j < numOfOutputNodes; j++) {
+    float deltaWeights[numOfOutputNodes][numOfHiddenNodes];
+    for(int i = 0; i < numOfOutputNodes; i++) {
+        for(int j = 0; j < numOfHiddenNodes; j++) {
             deltaWeights[i][j] = learningRate  * outputs[i] * errors[j];
             weights[i][j] += deltaWeights[i][j];
         }
@@ -145,7 +146,7 @@ int main(int argc, char const *argv[]) {
         return -1;
     }
     
-    float learningRate = 0.5; 
+    float learningRate = 0.05;
     
     int inputNodes[numOfInputNodes];
     float hiddenNodes[numOfHiddenNodes];
@@ -162,10 +163,32 @@ int main(int argc, char const *argv[]) {
     float weightsOutput[numOfOutputNodes][numOfHiddenNodes];
     randomizeWeightMatrixForOutPut(weightsOutput);
     
-    for(int simulation = 0; simulation < 20; simulation++) {
+    for(int epoch = 0; epoch < 200; epoch++) {
+        
+        
+        float resultError = 0;
+        
+        for(int picIndex = 0; picIndex < sizeTestingData; picIndex++) {
+            get_input(inputNodes, zTestingData, picIndex, 0);
+            
+            initTarget(target, inputNodes, zTestingData[picIndex].label);
+            
+            get_output_hidden(hiddenNodes, inputNodes, weightsHidden);
+            squash_output(hiddenNodes);
+            
+            get_output(outputNodes, hiddenNodes, weightsOutput);
+            squash_output(outputNodes);
+            
+            get_error_for_output(errorsOutput, target, outputNodes);
+            resultError += getAverageError(errorsOutput);
+            
+        }
+        
+        cout << (resultError / sizeTestingData) << ", ";
+        
         for(int picIndex = 0; picIndex < sizeData; picIndex++) {
             
-            get_input(inputNodes, zData, picIndex, 0.3);
+            get_input(inputNodes, zData, picIndex, 0);
             
             initTarget(target, inputNodes, zData[picIndex].label);
             
@@ -181,25 +204,6 @@ int main(int argc, char const *argv[]) {
             get_error_for_hidden_layer(errorsOutput, errorsHidden, hiddenNodes, weightsOutput);
             update_weights_hidden(learningRate, hiddenNodes, errorsHidden, weightsHidden);
         }
-        
-        float resultError = 0;
-        
-        for(int picIndex = 0; picIndex < sizeTestingData; picIndex++) {
-            get_input(inputNodes, zTestingData, picIndex, 0.3);
-            
-            initTarget(target, inputNodes, zTestingData[picIndex].label);
-            
-            get_output_hidden(hiddenNodes, inputNodes, weightsHidden);
-            squash_output(hiddenNodes);
-            
-            get_output(outputNodes, hiddenNodes, weightsOutput);
-            squash_output(outputNodes);
-            
-            get_error_for_output(errorsOutput, target, outputNodes);
-            resultError += getAverageError(errorsOutput);
-        }
-        
-        cout << (resultError / sizeTestingData) << " ";
         
     }
     
