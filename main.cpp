@@ -7,7 +7,7 @@
 using namespace std;
 
 #define numOfInputNodes 785
-#define numOfHiddenNodes 11
+#define numOfHiddenNodes 10
 #define numOfOutputNodes 785
 
 void randomizeWeightMatrixForHidden(float weights[numOfHiddenNodes][numOfInputNodes]) {
@@ -94,22 +94,22 @@ float getAverageError(float error[]) {
     return (errorsSum / numOfOutputNodes);
 }
 
-void update_weights_output(float learningRate, float outputs[], float errors[], float weights[numOfOutputNodes][numOfHiddenNodes]) {
+void update_weights_output(float learningRate, float hidden[], float errors[], float weights[numOfOutputNodes][numOfHiddenNodes]) {
     float deltaWeights[numOfOutputNodes][numOfHiddenNodes];
     for(int i = 0; i < numOfOutputNodes; i++) {
         for(int j = 0; j < numOfHiddenNodes; j++) {
-            deltaWeights[i][j] = learningRate  * outputs[i] * errors[j];
+            deltaWeights[i][j] = learningRate  * hidden[j] * errors[i];
             weights[i][j] += deltaWeights[i][j];
         }
     }
 }
 
 
-void update_weights_hidden(float learningRate, float outputs[], float errors[], float weights[numOfHiddenNodes][numOfInputNodes]) {
+void update_weights_hidden(float learningRate, int input[], float errors[], float weights[numOfHiddenNodes][numOfInputNodes]) {
     float deltaWeights[numOfHiddenNodes][numOfInputNodes];
     for(int i = 0; i < numOfHiddenNodes; i++) {
         for(int j = 0; j < numOfInputNodes; j++) {
-            deltaWeights[i][j] = learningRate  * outputs[i] * errors[j];
+            deltaWeights[i][j] = learningRate * input[j] * errors[i];
             weights[i][j] += deltaWeights[i][j];
         }
     }
@@ -146,7 +146,7 @@ int main(int argc, char const *argv[]) {
         return -1;
     }
     
-    float learningRate = 0.05;
+    float learningRate = 0.1;
     
     int inputNodes[numOfInputNodes];
     float hiddenNodes[numOfHiddenNodes];
@@ -163,7 +163,7 @@ int main(int argc, char const *argv[]) {
     float weightsOutput[numOfOutputNodes][numOfHiddenNodes];
     randomizeWeightMatrixForOutPut(weightsOutput);
     
-    for(int epoch = 0; epoch < 200; epoch++) {
+    for(int epoch = 0; epoch < 20; epoch++) {
         
         
         float resultError = 0;
@@ -199,10 +199,10 @@ int main(int argc, char const *argv[]) {
             squash_output(outputNodes);
             
             get_error_for_output(errorsOutput, target, outputNodes);
-            update_weights_output(learningRate, outputNodes, errorsOutput, weightsOutput);
+            update_weights_output(learningRate, hiddenNodes, errorsOutput, weightsOutput);
             
             get_error_for_hidden_layer(errorsOutput, errorsHidden, hiddenNodes, weightsOutput);
-            update_weights_hidden(learningRate, hiddenNodes, errorsHidden, weightsHidden);
+            update_weights_hidden(learningRate, inputNodes, errorsHidden, weightsHidden);
         }
         
     }
